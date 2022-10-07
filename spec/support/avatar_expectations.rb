@@ -3,7 +3,22 @@ module AvatarExpectations
     File.expand_path("../../fixtures/#{name}", __FILE__)
   end
 
-  def assert_image_equality(actual_image_blob, expected_image_name, hamming_distance = 2)
+  def compare(actual_image_path, expected_image_path, alg)
+    tmp_file = Tempfile.new(SecureRandom.hex(8).to_s)
+    compare = MiniMagick::Tool::Compare.new(whiny: false)
+    compare.metric(alg)
+    compare << actual_image_path
+    compare << expected_image_path
+    compare << tmp_file.path
+    data = nil
+    compare.call do |_stdout, stderr, _status|
+      data = stderr
+    end
+    tmp_file.unlink
+    data
+  end
+
+  def assert_image_equality(actual_image_blob, expected_image_name, distance = 0)
     actual_image_path = resource_file('temp_generated_image.png')
     expected_image_path = resource_file("#{expected_image_name}.png")
 
@@ -11,14 +26,13 @@ module AvatarExpectations
       f.write actual_image_blob
     end
 
-    actual_image = Phashion::Image.new(actual_image_path)
-    expected_image = Phashion::Image.new(expected_image_path)
+    actual_image = MiniMagick::Image.open(actual_image_path)
+    expected_image = MiniMagick::Image.open(expected_image_path)
 
-    result = actual_image.duplicate?(expected_image, threshold: hamming_distance)
+    compare_result = compare(actual_image, expected_image, 'AE').to_i
+    result = (compare_result <= distance)
 
-    unless result
-      puts "Hamming distance between two images: #{actual_image.distance_from(expected_image)}. Required at least #{hamming_distance}."
-    end
+    puts "Distance between two images: #{compare_result}. Required at least #{distance}." unless result
 
     expect(result).to be true
 

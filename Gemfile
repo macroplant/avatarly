@@ -1,12 +1,12 @@
-source "http://rubygems.org"
+source 'http://rubygems.org'
 
 gemspec
 
 gem 'unicode_utils'
 
 group :development, :test do
-  gem 'rspec'
   gem 'fastimage'
-  gem 'phashion'
+  gem 'mini_magick'
   gem 'pry'
+  gem 'rspec'
 end

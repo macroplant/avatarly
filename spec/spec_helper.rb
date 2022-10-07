@@ -1,6 +1,7 @@
 require 'rspec'
 require 'avatarly'
-require 'phashion'
+require 'mini_magick'
+require 'securerandom'
 require 'support/avatar_expectations'
 require 'fastimage'
 require 'tempfile'
